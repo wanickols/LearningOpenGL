@@ -51,11 +51,15 @@ int main(void)
     glGenBuffers(1, &buffer);  //generates a buffer and returns and id
     //binds it, draw will call whatever is bound
     glBindBuffer(GL_ARRAY_BUFFER, buffer); //binds buffer as an array
-    //             type         , size. data,   usage case
-    //                                          static means drawn once updated often, draw means were gonna draw it
-    glBufferData(GL_ARRAY_BUFFER, 6, positions, GL_STATIC_DRAW);
     
-
+    //sets data of buffer. 
+    glBufferData(GL_ARRAY_BUFFER, 6, positions, GL_STATIC_DRAW);
+   
+    
+    //tells openGL the format of your attribute. See gldoc for each parameter  
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+    
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
