@@ -8,6 +8,8 @@
 #include <string>
 #include <sstream>
 
+#define ASSERT(x) if(!(x)) __debugbreak;
+
 //callback function
 void GLAPIENTRY errorOccurredGL(GLenum source,
     GLenum type,
@@ -20,7 +22,7 @@ void GLAPIENTRY errorOccurredGL(GLenum source,
     printf("Message from OpenGL:\nSource: 0x%x\nType: 0x%x\n"
         "Id: 0x%x\nSeverity: 0x%x\n", source, type, id, severity);
     printf("%s\n", message);
-    exit(1);
+    exit(-1);
 }
 
 struct ShaderProgramSource
@@ -157,6 +159,9 @@ int main(void)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    //framerate
+    glfwSwapInterval(1.0); //1 takes whatever vsync has
+
     //Inits Glew;
     //Glew interacts finds Graphics API to get the openGL functions and assigns them the right name. This is not a library, more like a linker between the graphics and your IDE. 
     if (glewInit() != GLEW_OK)
@@ -168,6 +173,10 @@ int main(void)
     //prints GL version to console
     std::cout << glGetString(GL_VERSION) << std::endl;
     
+    //Debug
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(errorOccurredGL, NULL);
+
     float positions[] =
     {
         -0.5f, -0.5f,
@@ -183,18 +192,27 @@ int main(void)
         2 ,3, 0
     };
 
+    //bind vertex array
+    unsigned int vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+
+    //bind a buffer
     unsigned int vbo; //ID for buffer
     //Allocates memeory on the VRAM of the graphics card for use   
     glGenBuffers(1, &vbo);  //generates a buffer and returns and id
     //binds it, draw will call whatever is bound
     glBindBuffer(GL_ARRAY_BUFFER, vbo); //binds buffer as an array
     //sets data of buffer. 
-    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 4  * 2 * sizeof(float), positions, GL_STATIC_DRAW);
+
 
     //tells openGL the format of your attribute. See gldoc for each parameter  
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, NULL);
     
+
     //index buffer object
     unsigned int ibo;
     glGenBuffers(1, &ibo);  
@@ -207,20 +225,43 @@ int main(void)
 
     //Creates shader
     unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-    glLinkProgram(shader);
     glUseProgram(shader);
 
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(errorOccurredGL, NULL);
+   
+    //SetColor
+    int location = glGetUniformLocation(shader, "u_Color");
+    ASSERT(location != -1);
+    glUniform4f(location, 1.0, 0.5, 1.0, 1.0);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    float r = 0.0f;
+    float increment = 0.01; 
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
-                    
-                                                        //can use nullptr because we bound it already.
+        
+        glUseProgram(shader);
+
+        glUniform4f(location, r, 0.5, 1.0, 1.0);
+
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+       
+        //can use nullptr because we bound it already.
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
+        if (r > 1.0 || r < 0.0f)
+            increment = -increment;
+
+        r += increment;
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
