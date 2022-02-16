@@ -8,6 +8,21 @@
 #include <string>
 #include <sstream>
 
+//callback function
+void GLAPIENTRY errorOccurredGL(GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam)
+{
+    printf("Message from OpenGL:\nSource: 0x%x\nType: 0x%x\n"
+        "Id: 0x%x\nSeverity: 0x%x\n", source, type, id, severity);
+    printf("%s\n", message);
+    exit(1);
+}
+
 struct ShaderProgramSource
 {
     std::string VertexSource;
@@ -195,7 +210,8 @@ int main(void)
     glLinkProgram(shader);
     glUseProgram(shader);
 
-
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(errorOccurredGL, NULL);
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
