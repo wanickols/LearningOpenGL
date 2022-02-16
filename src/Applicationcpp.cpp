@@ -2,8 +2,71 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <iostream>
 
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+
+struct ShaderProgramSource
+{
+    std::string VertexSource;
+    std::string FragmentSource;
+};
+
+static ShaderProgramSource parseShader(const std::string& filepath)
+{
+
+    //types of shaders
+    enum class ShaderType
+    {
+        NONE = -1, VERTEX = 0, FRAGMENT = 1
+    };
+  
+    ShaderType type = ShaderType::NONE;
+
+    std::fstream fs;
+    fs.open(filepath, std::ios::in);
+ 
+    if (fs.is_open()) {
+        std::string line;
+        std::stringstream ss[2];
+
+        while (std::getline(fs, line))
+        {
+ 
+
+            //looking for #shader tag at top of each shader
+            if (line.find("#shader") != std::string::npos)
+            {
+                //changes mode based on type of shader
+                if (line.find("vertex") != std::string::npos)
+                {
+                    type = ShaderType::VERTEX;
+                }
+                else if (line.find("fragment") != std::string::npos)
+                {
+                    type = ShaderType::FRAGMENT;
+                }
+            }
+            else
+            {
+                //prints to a ss based on current mode
+                ss[int(type)] << line << "\n";
+            }
+        }
+        fs.close();
+        return { ss[0].str(), ss[1].str() };
+
+    }else
+    {
+        std::cout << "ERROR::parseShader::File Unable to Open." << "\n";
+    }
+
+    return ShaderProgramSource();
+
+   
+}
 
 static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
@@ -90,50 +153,45 @@ int main(void)
     //prints GL version to console
     std::cout << glGetString(GL_VERSION) << std::endl;
     
-    float positions[6] =
+    float positions[] =
     {
         -0.5f, -0.5f,
-         0.f,  0.5f,
-         0.5f,  -0.5f
+         0.5f,  -0.5f,
+         0.5f,  0.5f,
+        -0.5f,  0.5f
     };
     
    
+    //index buffer
+    unsigned int indices[] = {
+        0 ,1, 2,
+        2 ,3, 0
+    };
+
     unsigned int vbo; //ID for buffer
     //Allocates memeory on the VRAM of the graphics card for use   
     glGenBuffers(1, &vbo);  //generates a buffer and returns and id
     //binds it, draw will call whatever is bound
     glBindBuffer(GL_ARRAY_BUFFER, vbo); //binds buffer as an array
-
     //sets data of buffer. 
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), positions, GL_STATIC_DRAW);
 
     //tells openGL the format of your attribute. See gldoc for each parameter  
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, NULL);
     
+    //index buffer object
+    unsigned int ibo;
+    glGenBuffers(1, &ibo);  
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo); //uses gl_element instead of just normal
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
 
-    //Shader
-    std::string vertexShader =
-        "#version 330 core \n"
-        "\n"
-        "layout(location = 0) in vec4 position;\n"
-        "\n"
-        "void main()\n"
-        "{\n"
-        " gl_Position = position;\n"
-        "}\n";
 
-    std::string fragmentShader =
-        "#version 330 core \n"
-        "\n"
-        "out vec4 color;"
-        "\n"
-        "void main()\n"
-        "{\n"
-        "   color = vec4(1.0, 0.0, 0.0, 1.0); \n"
-        "}\n";
+    //gets source shaders from file and parses them
+    ShaderProgramSource source = parseShader("res/shaders/Basic.Shader");
 
-    unsigned int shader = CreateShader(vertexShader, fragmentShader);
+    //Creates shader
+    unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
     glLinkProgram(shader);
     glUseProgram(shader);
 
@@ -144,8 +202,8 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
                     
-
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+                                                        //can use nullptr because we bound it already.
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -153,6 +211,8 @@ int main(void)
         /* Poll for and process events */
         glfwPollEvents();
     }
+
+   // glDeleteProgram(shader);
 
     glfwTerminate();
     return 0;
