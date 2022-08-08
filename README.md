@@ -1,4 +1,4 @@
-# RPGGame
+# OpenGL Practice
 
 ## Purpose
 I wanted to learn OpenGL because I consider it interesting! Moreso than that, I believe that it is an underpinning of modern software development, especially in game development, and that knowing how things work allows for better programming even if it is not something I will use directly. (Here, I am not necessarily talking about OpenGL specifically, but about all graphics APIs that are similar).
