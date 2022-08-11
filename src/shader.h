@@ -23,6 +23,8 @@ public:
 	ShaderProgramSource parseShader(const string& filepath);
 	//Set Uniforms
 	void SetUniform4f(const string& name, float v0, float v1, float v2, float v3);
+	void SetUniform1f(const string& name, float value);
+	void SetUniform1i(const string& name, int value);
 private:
 	unsigned int GetUniformLocation(const string& name);
 };

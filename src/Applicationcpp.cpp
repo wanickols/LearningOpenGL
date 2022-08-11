@@ -6,6 +6,7 @@
 #include "IndexBuffer.h"
 #include "VertexArray.h"
 #include "shader.h"
+#include "Texture.h"
 
 
 
@@ -52,10 +53,10 @@ int main(void)
     {
         float positions[] =
         {
-            -0.5f, -0.5f,
-             0.5f,  -0.5f,
-             0.5f,  0.5f,
-            -0.5f,  0.5f 
+            -0.5f, -0.5f, 0.0f, 0.0f,
+             0.5f,  -0.5f, 1.0f, 0.0f,
+             0.5f,  0.5f, 1.0f, 1.0f,
+            -0.5f,  0.5f, 0.0f, 1.0f
         };
 
 
@@ -65,12 +66,16 @@ int main(void)
             2 ,3, 0
         };
 
-    
+        //Determines how transparency works
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+
         VertexArray va;
-        VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+        VertexBuffer vb(positions, 4 * 4 * sizeof(float));
         
         //make a layout
         VertexBufferLayout layout;
+        layout.Push<float>(2);
         layout.Push<float>(2);
 
         //binds buffer to a layout
@@ -82,13 +87,21 @@ int main(void)
 
         Shader shader("res/shaders/Basic.Shader");
         shader.Bind();
-        shader.SetUniform4f("u_Color", 0.8f, 0.5f, 1.0f, 1.0f);
+        //shader.SetUniform4f("u_Color", 0.8f, 0.5f, 1.0f, 1.0f);
         //SetColor
+        
+        //Texturs
+        Texture texture("res/textures/block.png");
+        texture.Bind();
+        shader.SetUniform1i("u_Texture", 0);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
+        //Unbinding
+        ib.Unbind();
+        va.Unbind();
         shader.Unbind();
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        vb.Unbind();
+
+        Renderer renderer;
 
         float r = 0.0f;
         float increment = 0.01f;
@@ -98,17 +111,14 @@ int main(void)
         {
 
             /* Render here */
-            glClear(GL_COLOR_BUFFER_BIT);
+            renderer.Clear();
 
             shader.Bind();
 
-            shader.SetUniform4f("u_Color", r, 0.5, 1.0, 1.0);
+            //shader.SetUniform4f("u_Color", r, 0.5, 1.0, 1.0);
+            shader.SetUniform1i("u_Texture", 0);
 
-            va.Bind();
-            ib.Bind();
-
-            //can use nullptr because we bound it already.
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+            renderer.Draw(va, ib, shader);
 
             if (r > 1.0 || r < 0.0f)
                 increment = -increment;
