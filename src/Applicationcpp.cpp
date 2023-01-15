@@ -47,7 +47,7 @@ int main(void)
     cout << glGetString(GL_VERSION) << endl;
     
     //Debug
-    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
     glDebugMessageCallback(errorOccurredGL, NULL);
     {

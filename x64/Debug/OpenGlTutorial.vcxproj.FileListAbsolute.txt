@@ -1,1 +1,2 @@
 C:\Users\Andre\source\repos\OpenGlTutorial\x64\Debug\OpenGlTutorial.exe
+C:\Projects\Includes\LearningOpenGL\x64\Debug\OpenGlTutorial.exe
