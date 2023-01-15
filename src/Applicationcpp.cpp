@@ -53,7 +53,7 @@ int main(void)
     {
         float positions[] =
         {
-            -0.5f, -0.5f, 0.0f, 0.0f,
+            -0.5f, -0.5f, 0.f, 0.0f,
              0.5f,  -0.5f, 1.0f, 0.0f,
              0.5f,  0.5f, 1.0f, 1.0f,
             -0.5f,  0.5f, 0.0f, 1.0f
@@ -66,9 +66,11 @@ int main(void)
             2 ,3, 0
         };
 
+
+        glEnable(GL_BLEND);
         //Determines how transparency works
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_BLEND);
+
 
         VertexArray va;
         VertexBuffer vb(positions, 4 * 4 * sizeof(float));
